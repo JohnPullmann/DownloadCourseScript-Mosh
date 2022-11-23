@@ -27,3 +27,12 @@
         
 #         idx += 1
 #         download_video(f"video{idx}.mp4", download_video_btn)
+
+from src.data import Data
+
+def download_course() -> bool:
+    pass
+
+
+if __name__ == "__main__":
+    download_course()
