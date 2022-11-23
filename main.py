@@ -31,7 +31,9 @@
 from src.data import Data
 
 def download_course() -> bool:
-    pass
+    data = Data()
+    data.get_course_link()
+    print(data.links_array)
 
 
 if __name__ == "__main__":
