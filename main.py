@@ -31,7 +31,10 @@
 from src.data import Data
 
 def download_course() -> bool:
-    pass
+    data = Data()
+    
+    
+    data.get_credentials()
 
 
 if __name__ == "__main__":
