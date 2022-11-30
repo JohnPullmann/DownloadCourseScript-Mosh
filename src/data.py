@@ -2,6 +2,8 @@ import re
 from bs4 import BeautifulSoup
 import requests
 import urllib
+import os
+import ntpath
 
 class Data():
     links_array = []
@@ -74,43 +76,45 @@ class Data():
                 else:
                     file.write(lines[1]+"\n")
 
+        def change_credentials() -> tuple[str, str]:
+            print("Invalid content format of creadentials.txt")
+            email = input_email()
+            password = input_password()
+            write_to_credentials(email=email, password=password)
+            return (email, password)
+
+
         with open("credentials.txt", 'r') as file:
             lines = file.read().splitlines()
 
         if len(lines) < 2:
-            print("Invalid content format of creadentials.txt")
-            email = input_email()
-            password = input_password()
-            write_to_credentials(email=email, password=password)
+            email, password = change_credentials()
         else:
             email = lines[0]
             password = lines[1]
 
-        if len(email) < 6 or len(password) < 6:
-            print("Invalid content format of creadentials.txt")
-            email = input_email()
-            password = input_password()
-            write_to_credentials(email=email, password=password)
+            if len(email) < 6 or len(password) < 6:
+                email, password = change_credentials()
 
-        elif email[0:6] != "email:" or password[0:9] != "password:":
-            print("Invalid content format of creadentials.txt")
-            email = input_email()
-            password = input_password()
-            write_to_credentials(email=email, password=password)
+            elif email[0:6] != "email:" or password[0:9] != "password:":
+                email, password = change_credentials()
+
+            else:
+                email = email.split(" ")[1]
+                password = password.split(" ")[1]
 
         # test if email is valid
-        email = email.split(" ")[1]
         if email == "" or validate_email(email) == False:
             email = input_email()
             write_to_credentials(email=email)
         
         # test or get password
-        password = password.split(" ")[1]
         if password == "":
             password = input_password()
             write_to_credentials(password=password)
 
         return {"email": email, "password": password}
+
 
     def main_request(self, credentails) -> requests.sessions.Session:
         
