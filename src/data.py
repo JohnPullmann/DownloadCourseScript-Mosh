@@ -2,6 +2,7 @@ import re
 
 class Data():
     links_array = []
+    courses_data = []
     
     def get_course_link(self) -> bool:
         with open("course_links.txt", 'r') as file:
@@ -107,5 +108,36 @@ class Data():
     def create_structure(self) -> bool:
         pass
 
+
+class Course(Data):
+    def __init__(self, name, time):
+        self.name = name
+        self.time = time
+        self.sections = {}
+
+        Data.courses_data.append(self)
+
+        
+    def add_section(self, lecture_name: str):
+        self.sections[lecture_name] = []
+
+    def add_lecture(self, section_name: str, lecture_link: str, lecture_name: str, lecture_id: str):
+        lecture = Lecture(lecture_name, lecture_id, lecture_link)
+        self.lectures[section_name].append(lecture)
+    
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name}, {self.time})"
+
+
+class Lecture(Course):
+    def __init__(self, name: str, id: str, link: str):
+        self.name = name 
+        self.id = id 
+        self.url = "https://codewithmosh.com/" + link
+
+        
     def download_lecture(self) -> bool:
         pass
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name}, {self.id})"
