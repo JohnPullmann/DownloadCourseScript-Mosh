@@ -31,10 +31,15 @@
 from src.data import Data
 
 def download_course() -> bool:
+    
     data = Data()
-
     data.get_course_link()
+
+    credentails = data.get_credentials()
+    session = data.main_request(credentails)
+
     credentials = data.get_credentials()
+
 
 if __name__ == "__main__":
     download_course()

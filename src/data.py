@@ -1,9 +1,22 @@
 import re
+from bs4 import BeautifulSoup
+import requests
+import urllib
 
 class Data():
     links_array = []
     courses_data = []
     
+    def __init__(self):
+        self.is_internet_connect()
+    
+    def is_internet_connect(self, host="http://google.com"):
+        try:
+            urllib.request.urlopen(host)
+        except:
+            raise Exception("You don't have internet connection!")
+        
+
     def get_course_link(self) -> bool:
         with open("course_links.txt", 'r') as file:
             
@@ -61,9 +74,6 @@ class Data():
                 else:
                     file.write(lines[1]+"\n")
 
-
-
-
         with open("credentials.txt", 'r') as file:
             lines = file.read().splitlines()
 
@@ -102,8 +112,40 @@ class Data():
 
         return {"email": email, "password": password}
 
-    def main_request(self) -> bool:
-        pass
+    def main_request(self, credentails) -> requests.sessions.Session:
+        
+        def log_in():
+            
+            session = requests.Session()
+            
+            payload = {
+                "email": credentails["email"],
+                "password": credentails["password"]
+            }
+            
+            session.post("https://sso.teachable.com/secure/146684/identity/login/password", data=payload)
+            
+            def valid_url_address():
+                for link in self.links_array:
+                    
+                    r = session.get(link)
+                    response = r.status_code
+                    
+                    if 200 <= response <= 299:
+                        pass
+                    else:
+                        raise Exception(f"[{response} Error]: {link}")
+                    
+                return True 
+            
+            if valid_url_address():
+                pass
+            
+            return session
+        
+        session = log_in()
+        return session
+    
 
     def create_structure(self) -> bool:
         pass
