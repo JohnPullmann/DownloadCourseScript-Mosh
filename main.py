@@ -28,7 +28,7 @@
 #         idx += 1
 #         download_video(f"video{idx}.mp4", download_video_btn)
 
-from src.data import Data
+from src.data import Data, Course, Lecture
 
 def download_course() -> bool:
     
@@ -38,7 +38,13 @@ def download_course() -> bool:
     credentails = data.get_credentials()
     session = data.main_request(credentails)
 
-    credentials = data.get_credentials()
+
+
+
+    print(data.courses_data)
+    print(data.courses_data[0].sections)
+
+    data.create_structure()
 
 
 if __name__ == "__main__":

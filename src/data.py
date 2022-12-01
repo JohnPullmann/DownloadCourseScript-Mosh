@@ -2,6 +2,8 @@ import re
 from bs4 import BeautifulSoup
 import requests
 import urllib
+import os
+import ntpath
 
 class Data():
     links_array = []
@@ -74,43 +76,45 @@ class Data():
                 else:
                     file.write(lines[1]+"\n")
 
+        def change_credentials() -> tuple[str, str]:
+            print("Invalid content format of creadentials.txt")
+            email = input_email()
+            password = input_password()
+            write_to_credentials(email=email, password=password)
+            return (email, password)
+
+
         with open("credentials.txt", 'r') as file:
             lines = file.read().splitlines()
 
         if len(lines) < 2:
-            print("Invalid content format of creadentials.txt")
-            email = input_email()
-            password = input_password()
-            write_to_credentials(email=email, password=password)
+            email, password = change_credentials()
         else:
             email = lines[0]
             password = lines[1]
 
-        if len(email) < 6 or len(password) < 6:
-            print("Invalid content format of creadentials.txt")
-            email = input_email()
-            password = input_password()
-            write_to_credentials(email=email, password=password)
+            if len(email) < 6 or len(password) < 6:
+                email, password = change_credentials()
 
-        elif email[0:6] != "email:" or password[0:9] != "password:":
-            print("Invalid content format of creadentials.txt")
-            email = input_email()
-            password = input_password()
-            write_to_credentials(email=email, password=password)
+            elif email[0:6] != "email:" or password[0:9] != "password:":
+                email, password = change_credentials()
+
+            else:
+                email = email.split(" ")[1]
+                password = password.split(" ")[1]
 
         # test if email is valid
-        email = email.split(" ")[1]
         if email == "" or validate_email(email) == False:
             email = input_email()
             write_to_credentials(email=email)
         
         # test or get password
-        password = password.split(" ")[1]
         if password == "":
             password = input_password()
             write_to_credentials(password=password)
 
         return {"email": email, "password": password}
+
 
     def main_request(self, credentails) -> requests.sessions.Session:
         
@@ -148,13 +152,28 @@ class Data():
     
 
     def create_structure(self) -> bool:
-        pass
+        def create_folders_path(path: str) -> bool:
+            path = path.replace(os.sep, ntpath.sep)
+            if not os.path.exists(path):
+                try:
+                    os.makedirs(path)
+                except OSError:
+                    print ("Creation of the directory %s failed" % path)
+        
+        create_folders_path("Courses/")
+        for course in self.courses_data:
+            path = "Courses/"+course.name+" - "+course.time+"/"
+            create_folders_path(path)
+            for section, lectures in course.sections.items():
+                path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
+                create_folders_path(path)
+               
 
 
 class Course(Data):
-    def __init__(self, name, time):
+    def __init__(self, name: str, time: str = ""):
         self.name = name
-        self.time = time
+        self.__time = time
         self.sections = {}
 
         Data.courses_data.append(self)
@@ -165,16 +184,31 @@ class Course(Data):
 
     def add_lecture(self, section_name: str, lecture_link: str, lecture_name: str, lecture_id: str):
         lecture = Lecture(lecture_name, lecture_id, lecture_link)
-        self.lectures[section_name].append(lecture)
+        self.sections[section_name].append(lecture)
     
+    def get_cource_time(self) -> str:
+        #TODO
+        return ""
+    
+    @property
+    def time(self) -> str:
+        if self.sections:
+            time = self.get_cource_time()
+            self.__time = time
+            return time
+        else:
+            print("Time of course couldn't be calculated because no sections were found. Please first add some sections!")
+            return ""
+
+
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name}, {self.time})"
+        return f"{self.__class__.__name__}({self.name}, {self.__time})"
 
 
 class Lecture(Course):
-    def __init__(self, name: str, id: str, link: str):
+    def __init__(self, name: str, ID: str, link: str):
         self.name = name 
-        self.id = id 
+        self.id = ID 
         self.url = "https://codewithmosh.com/" + link
 
         
