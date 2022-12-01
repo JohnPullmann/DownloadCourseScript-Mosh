@@ -28,7 +28,7 @@
 #         idx += 1
 #         download_video(f"video{idx}.mp4", download_video_btn)
 
-from src.data import Data
+from src.data import Data, Course, Lecture
 
 def download_course() -> bool:
     
@@ -38,7 +38,23 @@ def download_course() -> bool:
     credentails = data.get_credentials()
     session = data.main_request(credentails)
 
-    credentials = data.get_credentials()
+
+    #TEST
+    # course = Course(name="Python", time="3h")
+    # course.add_section("Lists")
+    # course.add_lecture(section_name="Lists",lecture_link="hhttps:egergerg",lecture_name="List basics 1", lecture_id="64546454")
+    # course.add_lecture(section_name="Lists",lecture_link="hhttps:egergerg",lecture_name="List basics 2", lecture_id="4894456453")
+
+    # course.add_section("Tuples")
+    # course.add_lecture(section_name="Tuples",lecture_link="hhttps:egergerg",lecture_name="Tuple basics 1", lecture_id="6456454")
+    # course.add_lecture(section_name="Tuples",lecture_link="hhttps:egergerg",lecture_name="Tuple basics 2", lecture_id="489464464")
+
+
+    #add_lecture(self, section_name: str, lecture_link: str, lecture_name: str, lecture_id: str):
+    print(data.courses_data)
+    print(data.courses_data[0].sections)
+
+    data.create_structure()
 
 
 if __name__ == "__main__":

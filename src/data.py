@@ -152,7 +152,24 @@ class Data():
     
 
     def create_structure(self) -> bool:
-        pass
+        def create_folders_path(path: str) -> bool:
+            path = path.replace(os.sep, ntpath.sep)
+            if not os.path.exists(path):
+                try:
+                    os.makedirs(path)
+                except OSError:
+                    print ("Creation of the directory %s failed" % path)
+        
+        create_folders_path("Courses/")
+        for course in self.courses_data:
+            path = "Courses/"+course.name+"/"
+            create_folders_path(path)
+            for section, lectures in course.sections.items():
+                path = "Courses/"+course.name+"/"+section+"/"
+                create_folders_path(path)
+                for lecture in lectures:
+                    path = "Courses/"+course.name+"/"+section+"/"+lecture.name
+                    create_folders_path(path)
 
 
 class Course(Data):
@@ -169,16 +186,16 @@ class Course(Data):
 
     def add_lecture(self, section_name: str, lecture_link: str, lecture_name: str, lecture_id: str):
         lecture = Lecture(lecture_name, lecture_id, lecture_link)
-        self.lectures[section_name].append(lecture)
+        self.sections[section_name].append(lecture)
     
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name}, {self.time})"
 
 
 class Lecture(Course):
-    def __init__(self, name: str, id: str, link: str):
+    def __init__(self, name: str, ID: str, link: str):
         self.name = name 
-        self.id = id 
+        self.id = ID 
         self.url = "https://codewithmosh.com/" + link
 
         
