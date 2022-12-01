@@ -162,20 +162,18 @@ class Data():
         
         create_folders_path("Courses/")
         for course in self.courses_data:
-            path = "Courses/"+course.name+"/"
+            path = "Courses/"+course.name+" - "+course.time+"/"
             create_folders_path(path)
             for section, lectures in course.sections.items():
-                path = "Courses/"+course.name+"/"+section+"/"
+                path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
                 create_folders_path(path)
-                for lecture in lectures:
-                    path = "Courses/"+course.name+"/"+section+"/"+lecture.name
-                    create_folders_path(path)
+               
 
 
 class Course(Data):
-    def __init__(self, name, time):
+    def __init__(self, name: str, time: str = ""):
         self.name = name
-        self.time = time
+        self.__time = time
         self.sections = {}
 
         Data.courses_data.append(self)
@@ -188,8 +186,22 @@ class Course(Data):
         lecture = Lecture(lecture_name, lecture_id, lecture_link)
         self.sections[section_name].append(lecture)
     
+    def get_cource_time(self) -> str:
+        return "300h"
+    
+    @property
+    def time(self) -> str:
+        if self.sections:
+            time = self.get_cource_time()
+            self.__time = time
+            return time
+        else:
+            print("Time of course couldn't be calculated because no sections were found. Please first add some sections!")
+            return ""
+
+
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name}, {self.time})"
+        return f"{self.__class__.__name__}({self.name}, {self.__time})"
 
 
 class Lecture(Course):
