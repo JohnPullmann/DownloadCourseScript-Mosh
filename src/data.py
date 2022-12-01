@@ -187,7 +187,8 @@ class Course(Data):
         self.sections[section_name].append(lecture)
     
     def get_cource_time(self) -> str:
-        return "300h"
+        #TODO
+        return ""
     
     @property
     def time(self) -> str:
