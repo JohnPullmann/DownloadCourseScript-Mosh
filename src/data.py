@@ -25,11 +25,15 @@ class Data():
             file_content = file.read().splitlines()
             for url in file_content:
                 
-                if url.find("http") != -1:
+                if "http" in url or "https" in url:
                     n_links += 1
                     self.links_array.append(url)
+                elif set(url) == set(' ') or url == '':
+                    pass
                 else:
+                    print(url)
                     raise Exception("Something is wrong with the url address!")
+                
             if n_links == 0:
                 raise Exception("File 'course_links.txt' is empty!")
                 
