@@ -171,11 +171,12 @@ class Data():
                     
                     for lecture in lectures_array:
                         
-                        lecture_url = lecture.find(name="a", class_="item").get("href")
-                        lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
-                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ") 
+                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
+                        if '(' in lecture_name and ')' in lecture_name:
+                            lecture_url = lecture.find(name="a", class_="item").get("href")
+                            lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
                         
-                        course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+                            course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
                 
                 
                 
