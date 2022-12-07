@@ -21,20 +21,17 @@ class Data():
 
     def get_course_link(self) -> bool:
         with open("course_links.txt", 'r') as file:
-            
-            empty_line = 0
+            n_links = 0
             file_content = file.read().splitlines()
             for url in file_content:
                 
                 if url.find("http") != -1:
+                    n_links += 1
                     self.links_array.append(url)
-                elif url == '':
-                    empty_line += 1
                 else:
                     raise Exception("Something is wrong with the url address!")
-                    
-                if empty_line == len(file_content):
-                    raise Exception("File 'course_links.txt' is empty!")
+            if n_links == 0:
+                raise Exception("File 'course_links.txt' is empty!")
                 
         return True
 
@@ -151,9 +148,9 @@ class Data():
         
         
         def get_html_information():
-            
+
             for link in self.links_array:
-                
+
                 result = session.get(link).text
                 soup = BeautifulSoup(result, "html.parser")
                 
@@ -189,7 +186,7 @@ class Data():
                     os.makedirs(path)
                 except OSError:
                     print ("Creation of the directory %s failed" % path)
-        
+
         create_folders_path("Courses/")
         for course in self.courses_data:
             path = "Courses/"+course.name+" - "+course.time+"/"
@@ -205,7 +202,7 @@ class Course(Data):
         self.name = name
         self.__time = time
         self.sections = {}
-
+        
         Data.courses_data.append(self)
 
         
@@ -222,15 +219,16 @@ class Course(Data):
         for section in self.sections:
             s = section.index("(")
             s_time = section[s+1:-1]
-
             if "h" in s_time:
-                x = s_time.split("h")
-                course_time +=  60 * int(x[0]) + int(x[1][:-1])
+                x = s_time.strip().split("h")
+                course_time +=  60 * int(x[0])
+                if 'm' in x[1]:
+                    course_time += int(x[1][:-1])
             else:
                 course_time += int(s_time[:-1])
             pass
-        minutes, hours = course_time % 60, course_time // 60
 
+        minutes, hours = course_time % 60, course_time // 60
         course_time = f"{hours}{'h' if hours != 0 else ''}{minutes}{'m' if minutes != 0 else ''}"
         return course_time
     
