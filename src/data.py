@@ -9,8 +9,8 @@ class Data():
     links_array = []
     courses_data = []
     
-    #def __init__(self):
-    #    self.is_internet_connect()
+    def __init__(self):
+        self.is_internet_connect()
     
     def is_internet_connect(self, host="http://google.com"):
         try:
