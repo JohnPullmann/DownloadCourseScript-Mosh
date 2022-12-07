@@ -35,14 +35,14 @@ def download_course() -> bool:
     data = Data()
     data.get_course_link()
 
-    credentails = data.get_credentials()
-    session = data.main_request(credentails)
+    #credentails = data.get_credentials()
+    #session = data.main_request(credentails)
 
 
 
 
-    print(data.courses_data)
-    print(data.courses_data[0].sections)
+
+
 
     data.create_structure()
 

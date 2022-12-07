@@ -9,8 +9,8 @@ class Data():
     links_array = []
     courses_data = []
     
-    def __init__(self):
-        self.is_internet_connect()
+    #def __init__(self):
+    #    self.is_internet_connect()
     
     def is_internet_connect(self, host="http://google.com"):
         try:
@@ -187,8 +187,22 @@ class Course(Data):
         self.sections[section_name].append(lecture)
     
     def get_cource_time(self) -> str:
-        #TODO
-        return ""
+
+        course_time = 0
+        for section in self.sections:
+            s = section.index("(")
+            s_time = section[s+1:-1]
+
+            if "h" in s_time:
+                x = s_time.split("h")
+                course_time +=  60 * int(x[0]) + int(x[1][:-1])
+            else:
+                course_time += int(s_time[:-1])
+            pass
+        minutes, hours = course_time % 60, course_time // 60
+
+        course_time = f"{hours}{'h' if hours != 0 else ''}{minutes}{'m' if minutes != 0 else ''}"
+        return course_time
     
     @property
     def time(self) -> str:
