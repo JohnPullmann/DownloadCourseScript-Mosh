@@ -219,19 +219,19 @@ class Course(Data):
         for section in self.sections:
             s = section.index("(")
             s_time = section[s+1:-1]
-            if 'h' in s_time or 'm' in s_time:
-                if 'h' in s_time:
-                    x = s_time.strip().split("h")
-                    course_time +=  60 * int(x[0])
-                    if 'm' in x[1]:
-                        course_time += int(x[1][:-1])
+            if 's' not in s_time:
+                if 'h' in s_time or 'm' in s_time:
+                    if 'h' in s_time:
+                        x = s_time.strip().split("h")
+                        course_time +=  60 * int(x[0])
+                        if 'm' in x[1]:
+                            course_time += int(x[1][:-1])
+                    else:
+                        course_time += int(s_time[:-1])
                 else:
-                    course_time += int(s_time[:-1])
-            else:
-                x = s_time.strip().split(":")
-                course_time +=  60 * int(x[0])
-                course_time += int(x[1])
-            pass
+                    x = s_time.strip().split(":")
+                    course_time +=  60 * int(x[0])
+                    course_time += int(x[1])
 
         minutes, hours = course_time % 60, course_time // 60
         course_time = f"{hours}{'h' if hours != 0 else ''}{minutes}{'m' if minutes != 0 else ''}"
