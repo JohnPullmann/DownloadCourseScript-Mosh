@@ -148,19 +148,21 @@ class Data():
         
         
         def get_html_information():
-
+            
             for link in self.links_array:
 
                 result = session.get(link).text
                 soup = BeautifulSoup(result, "html.parser")
                 
                 course_name = soup.find(name="h2").text
+                course_name = "".join([x for x in course_name if x not in "/><:\"#\\|?!*,%[].'';:"])
                 course = Course(course_name)
                 
                 sections_array = soup.find_all(class_="col-sm-12 course-section")
                 for section in sections_array:
                     
                     section_name = section.find(class_="section-title", role="heading").text.strip()
+                    section_name = "".join([x for x in section_name if x not in "/><:\"#\\|?!*,%[].'';:"])
                     course.add_section(section_name)
                     
                     lectures_array = section.find_all(class_="section-item")
@@ -170,7 +172,7 @@ class Data():
                         lecture_url = lecture.find(name="a", class_="item").get("href")
                         lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
                         lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ") 
-                        
+                        lecture_name = "".join([x for x in lecture_name if x not in "/><:\"#\\|?!*,%[].'';:"])
                         course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
                 
                 
