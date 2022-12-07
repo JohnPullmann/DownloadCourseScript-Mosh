@@ -127,7 +127,7 @@ class Data():
                 "email": credentails["email"],
                 "password": credentails["password"]
             }
-            
+
             session.post("https://sso.teachable.com/secure/146684/identity/login/password", data=payload)
             
             def valid_url_address():
@@ -152,31 +152,41 @@ class Data():
         
         
         def get_html_information():
-
+            
             for link in self.links_array:
 
                 result = session.get(link).text
                 soup = BeautifulSoup(result, "html.parser")
                 
                 course_name = soup.find(name="h2").text
+                course_name = "".join([x for x in course_name if x not in "/><:\"#\\|?!*,%[].'';:"])
                 course = Course(course_name)
                 
                 sections_array = soup.find_all(class_="col-sm-12 course-section")
                 for section in sections_array:
                     
                     section_name = section.find(class_="section-title", role="heading").text.strip()
+                    section_name = "".join([x for x in section_name if x not in "/><:\"#\\|?!*,%[].'';:"])
                     course.add_section(section_name)
                     
                     lectures_array = section.find_all(class_="section-item")
                     
                     for lecture in lectures_array:
                         
+
                         lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
                         if '(' in lecture_name and ')' in lecture_name:
                             lecture_url = lecture.find(name="a", class_="item").get("href")
                             lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
                         
                             course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+
+                        lecture_url = lecture.find(name="a", class_="item").get("href")
+                        lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
+                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ") 
+                        lecture_name = "".join([x for x in lecture_name if x not in "/><:\"#\\|?!*,%[].'';:"])
+                        course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+
                 
                 
                 
@@ -224,14 +234,19 @@ class Course(Data):
         for section in self.sections:
             s = section.index("(")
             s_time = section[s+1:-1]
-            if "h" in s_time:
-                x = s_time.strip().split("h")
-                course_time +=  60 * int(x[0])
-                if 'm' in x[1]:
-                    course_time += int(x[1][:-1])
-            else:
-                course_time += int(s_time[:-1])
-            pass
+            if 's' not in s_time:
+                if 'h' in s_time or 'm' in s_time:
+                    if 'h' in s_time:
+                        x = s_time.strip().split("h")
+                        course_time +=  60 * int(x[0])
+                        if 'm' in x[1]:
+                            course_time += int(x[1][:-1])
+                    else:
+                        course_time += int(s_time[:-1])
+                else:
+                    x = s_time.strip().split(":")
+                    course_time +=  60 * int(x[0])
+                    course_time += int(x[1])
 
         minutes, hours = course_time % 60, course_time // 60
         course_time = f"{hours}{'h' if hours != 0 else ''}{minutes}{'m' if minutes != 0 else ''}"
