@@ -148,7 +148,37 @@ class Data():
             return session
         
         session = log_in()
-        return session
+        
+        
+        def get_html_information():
+            
+            for link in self.links_array:
+                
+                result = session.get(link).text
+                soup = BeautifulSoup(result, "html.parser")
+                
+                course_name = soup.find(name="h2").text
+                course = Course(course_name)
+                
+                sections_array = soup.find_all(class_="col-sm-12 course-section")
+                for section in sections_array:
+                    
+                    section_name = section.find(class_="section-title", role="heading").text.strip()
+                    course.add_section(section_name)
+                    
+                    lectures_array = section.find_all(class_="section-item")
+                    
+                    for lecture in lectures_array:
+                        
+                        lecture_url = lecture.find(name="a", class_="item").get("href")
+                        lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
+                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ") 
+                        
+                        course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+                
+                
+                
+        get_html_information()
     
 
     def create_structure(self) -> bool:
@@ -167,7 +197,7 @@ class Data():
             for section, lectures in course.sections.items():
                 path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
                 create_folders_path(path)
-               
+            
 
 
 class Course(Data):
@@ -207,9 +237,9 @@ class Course(Data):
     @property
     def time(self) -> str:
         if self.sections:
-            time = self.get_cource_time()
-            self.__time = time
-            return time
+            course_time = self.get_cource_time()
+            self.__time = course_time
+            return course_time
         else:
             print("Time of course couldn't be calculated because no sections were found. Please first add some sections!")
             return ""
