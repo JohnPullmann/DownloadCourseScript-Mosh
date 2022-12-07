@@ -9,8 +9,8 @@ class Data():
     links_array = []
     courses_data = []
     
-    #def __init__(self):
-    #    self.is_internet_connect()
+    def __init__(self):
+        self.is_internet_connect()
     
     def is_internet_connect(self, host="http://google.com"):
         try:
@@ -25,11 +25,15 @@ class Data():
             file_content = file.read().splitlines()
             for url in file_content:
                 
-                if url.find("http") != -1:
+                if "http" in url or "https" in url:
                     n_links += 1
                     self.links_array.append(url)
+                elif set(url) == set(' ') or url == '':
+                    pass
                 else:
+                    print(url)
                     raise Exception("Something is wrong with the url address!")
+                
             if n_links == 0:
                 raise Exception("File 'course_links.txt' is empty!")
                 
@@ -169,11 +173,20 @@ class Data():
                     
                     for lecture in lectures_array:
                         
+
+                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
+                        if '(' in lecture_name and ')' in lecture_name:
+                            lecture_url = lecture.find(name="a", class_="item").get("href")
+                            lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
+                        
+                            course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+
                         lecture_url = lecture.find(name="a", class_="item").get("href")
                         lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
                         lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ") 
                         lecture_name = "".join([x for x in lecture_name if x not in "/><:\"#\\|?!*,%[].'';:"])
                         course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+
                 
                 
                 
