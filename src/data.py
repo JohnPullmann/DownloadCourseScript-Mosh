@@ -123,7 +123,7 @@ class Data():
                 "email": credentails["email"],
                 "password": credentails["password"]
             }
-            
+
             session.post("https://sso.teachable.com/secure/146684/identity/login/password", data=payload)
             
             def valid_url_address():
@@ -219,13 +219,18 @@ class Course(Data):
         for section in self.sections:
             s = section.index("(")
             s_time = section[s+1:-1]
-            if "h" in s_time:
-                x = s_time.strip().split("h")
-                course_time +=  60 * int(x[0])
-                if 'm' in x[1]:
-                    course_time += int(x[1][:-1])
+            if 'h' in s_time or 'm' in s_time:
+                if 'h' in s_time:
+                    x = s_time.strip().split("h")
+                    course_time +=  60 * int(x[0])
+                    if 'm' in x[1]:
+                        course_time += int(x[1][:-1])
+                else:
+                    course_time += int(s_time[:-1])
             else:
-                course_time += int(s_time[:-1])
+                x = s_time.strip().split(":")
+                course_time +=  60 * int(x[0])
+                course_time += int(x[1])
             pass
 
         minutes, hours = course_time % 60, course_time // 60
