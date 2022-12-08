@@ -4,7 +4,6 @@ import requests
 import urllib
 import os
 import ntpath
-import pprint
 
 class Data():
     links_array = []
@@ -198,7 +197,7 @@ class Data():
         get_html_information()
     
 
-    def create_structure(self) -> bool:
+    def create_file_structure_and_download(self) -> bool:
         def create_folders_path(path: str) -> bool:
             path = path.replace(os.sep, ntpath.sep)
             if not os.path.exists(path):
@@ -208,24 +207,21 @@ class Data():
                     print ("Creation of the directory %s failed" % path)
 
         create_folders_path("Courses/")
+        
         for course in self.courses_data:
             path = "Courses/"+course.name+" - "+course.time+"/"
             create_folders_path(path)
+            
             for section, all_lectures in course.sections.items():
                 path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
                 create_folders_path(path)
                 
+                os.chdir(path)
                 
-                # Down
-                # for lecture in all_lectures:
-                #     lecture_instance = lecture
-                #     lecture_instance.download_lecture(path)
-                
-                # pprint.pprint(section)
-                # pprint.pprint(lecture)
-                # print(lecture)
-                # print(lectures)
-                # lectures[0].download_lecture()
+                # Download lectures
+                for lecture in all_lectures:
+                    lecture_instance = lecture
+                    lecture_instance.download_lecture()
             
 
 
@@ -291,8 +287,20 @@ class Lecture(Course):
         self.url = "https://codewithmosh.com/" + link
 
         
-    def download_lecture(self, path: str) -> bool:
-        pass
+    def download_lecture(self) -> None:
+        
+        result = requests.get(self.url).text
+        doc = BeautifulSoup(result, "html.parser")
+        
+        download_btn = doc.find_all(name="a", class_="download")[0].get("href")
+        
+        response = requests.get(download_btn)
+        
+        with open(self.name+'.mp4', "wb") as video:
+                video.write(response.content)
+                
+        print(f"{self.name} is downloaded.")
+
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name}, {self.id})"
