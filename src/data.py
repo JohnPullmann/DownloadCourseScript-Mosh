@@ -4,6 +4,7 @@ import requests
 import urllib
 import os
 import ntpath
+import pprint
 
 class Data():
     links_array = []
@@ -153,42 +154,46 @@ class Data():
         
         def get_html_information():
             
+            def get_rid_of_special_characters(element: str, better_time: bool = False) -> str:
+                
+                if better_time and '(' in element:
+                    element_time = element[element.find('(')+1:-1]
+                    element_time = element_time.replace(':','m') + 's'
+                    element = element[:element.find('(')] + element_time
+                    
+                return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
+                
+            
             for link in self.links_array:
 
                 result = session.get(link).text
                 soup = BeautifulSoup(result, "html.parser")
                 
                 course_name = soup.find(name="h2").text
-                course_name = "".join([x for x in course_name if x not in "/><:\"#\\|?!*,%[].'';:"])
+                course_name = get_rid_of_special_characters(element=course_name)
                 course = Course(course_name)
                 
                 sections_array = soup.find_all(class_="col-sm-12 course-section")
                 for section in sections_array:
                     
                     section_name = section.find(class_="section-title", role="heading").text.strip()
-                    section_name = "".join([x for x in section_name if x not in "/><:\"#\\|?!*,%[].'';:"])
+                    section_name = get_rid_of_special_characters(element=section_name)
                     course.add_section(section_name)
                     
                     lectures_array = section.find_all(class_="section-item")
                     
                     for lecture in lectures_array:
-                        
 
                         lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
+                        
+                        # The lecture is video 
                         if '(' in lecture_name and ')' in lecture_name:
+                            lecture_name = get_rid_of_special_characters(element=lecture_name, better_time=True)
                             lecture_url = lecture.find(name="a", class_="item").get("href")
                             lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
                         
                             course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
-
-                        lecture_url = lecture.find(name="a", class_="item").get("href")
-                        lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
-                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ") 
-                        lecture_name = "".join([x for x in lecture_name if x not in "/><:\"#\\|?!*,%[].'';:"])
-                        course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
-
-                
-                
+                        
                 
         get_html_information()
     
@@ -206,9 +211,21 @@ class Data():
         for course in self.courses_data:
             path = "Courses/"+course.name+" - "+course.time+"/"
             create_folders_path(path)
-            for section, lectures in course.sections.items():
+            for section, all_lectures in course.sections.items():
                 path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
                 create_folders_path(path)
+                
+                
+                # Down
+                # for lecture in all_lectures:
+                #     lecture_instance = lecture
+                #     lecture_instance.download_lecture(path)
+                
+                # pprint.pprint(section)
+                # pprint.pprint(lecture)
+                # print(lecture)
+                # print(lectures)
+                # lectures[0].download_lecture()
             
 
 
@@ -274,7 +291,7 @@ class Lecture(Course):
         self.url = "https://codewithmosh.com/" + link
 
         
-    def download_lecture(self) -> bool:
+    def download_lecture(self, path: str) -> bool:
         pass
 
     def __repr__(self) -> str:
