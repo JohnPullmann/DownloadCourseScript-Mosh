@@ -153,47 +153,51 @@ class Data():
         
         def get_html_information():
             
+            def get_rid_of_special_characters(element: str, better_time: bool = False) -> str:
+                
+                if better_time and '(' in element:
+                    element_time = element[element.find('(')+1:-1]
+                    element_time = element_time.replace(':','m') + 's'
+                    element = element[:element.find('(')] + element_time
+                    
+                return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
+                
+            
             for link in self.links_array:
 
                 result = session.get(link).text
                 soup = BeautifulSoup(result, "html.parser")
                 
                 course_name = soup.find(name="h2").text
-                course_name = "".join([x for x in course_name if x not in "/><:\"#\\|?!*,%[].'';:"])
+                course_name = get_rid_of_special_characters(element=course_name)
                 course = Course(course_name)
                 
                 sections_array = soup.find_all(class_="col-sm-12 course-section")
                 for section in sections_array:
                     
                     section_name = section.find(class_="section-title", role="heading").text.strip()
-                    section_name = "".join([x for x in section_name if x not in "/><:\"#\\|?!*,%[].'';:"])
+                    section_name = get_rid_of_special_characters(element=section_name)
                     course.add_section(section_name)
                     
                     lectures_array = section.find_all(class_="section-item")
                     
                     for lecture in lectures_array:
-                        
 
                         lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
+                        
+                        # The lecture is video 
                         if '(' in lecture_name and ')' in lecture_name:
+                            lecture_name = get_rid_of_special_characters(element=lecture_name, better_time=True)
                             lecture_url = lecture.find(name="a", class_="item").get("href")
                             lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
                         
                             course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
-
-                        lecture_url = lecture.find(name="a", class_="item").get("href")
-                        lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
-                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ") 
-                        lecture_name = "".join([x for x in lecture_name if x not in "/><:\"#\\|?!*,%[].'';:"])
-                        course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
-
-                
-                
+                        
                 
         get_html_information()
     
 
-    def create_structure(self) -> bool:
+    def create_file_structure_and_download(self) -> bool:
         def create_folders_path(path: str) -> bool:
             path = path.replace(os.sep, ntpath.sep)
             if not os.path.exists(path):
@@ -209,13 +213,29 @@ class Data():
                 return False
 
         create_folders_path("Courses/")
+        
         for course in self.courses_data:
             path = "Courses/"+course.name+" - "+course.time+"/"
+
+            create_folders_path(path)
+            
+            for section, all_lectures in course.sections.items():
+                path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
+                create_folders_path(path)
+                
+                os.chdir(path)
+                
+                # Download lectures
+                for lecture in all_lectures:
+                    lecture_instance = lecture
+                    lecture_instance.download_lecture()
+
             status = create_folders_path(path)
             if status:
                 for section, lectures in course.sections.items():
                     path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
                     create_folders_path(path)
+
             
 
 
@@ -281,8 +301,20 @@ class Lecture(Course):
         self.url = "https://codewithmosh.com/" + link
 
         
-    def download_lecture(self) -> bool:
-        pass
+    def download_lecture(self) -> None:
+        
+        result = requests.get(self.url).text
+        doc = BeautifulSoup(result, "html.parser")
+        
+        download_btn = doc.find_all(name="a", class_="download")[0].get("href")
+        
+        response = requests.get(download_btn)
+        
+        with open(self.name+'.mp4', "wb") as video:
+                video.write(response.content)
+                
+        print(f"{self.name} is downloaded.")
+
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name}, {self.id})"

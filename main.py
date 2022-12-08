@@ -40,7 +40,7 @@ def download_course() -> bool:
     data.main_request(credentails)
 
 
-    data.create_structure()
+    data.create_file_structure_and_download()
 
 
 if __name__ == "__main__":
