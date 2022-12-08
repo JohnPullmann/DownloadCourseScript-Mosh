@@ -199,16 +199,23 @@ class Data():
             if not os.path.exists(path):
                 try:
                     os.makedirs(path)
+                    return True
                 except OSError:
                     print ("Creation of the directory %s failed" % path)
+                    return False
+            else:
+                if path != "Courses/":
+                    print(f"Course already downloaded. Skipped course - {path}")
+                return False
 
         create_folders_path("Courses/")
         for course in self.courses_data:
             path = "Courses/"+course.name+" - "+course.time+"/"
-            create_folders_path(path)
-            for section, lectures in course.sections.items():
-                path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
-                create_folders_path(path)
+            status = create_folders_path(path)
+            if status:
+                for section, lectures in course.sections.items():
+                    path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
+                    create_folders_path(path)
             
 
 
