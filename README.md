@@ -53,7 +53,7 @@
 Distributed under the GNU GPLv3 License. See `LICENSE.txt` for more information.
 
 <div>
-<a href="https://github.com/JohnPullmann/DownloadCourseScript-Mosh/LICENSE.txt"><img  style="display: inline;" alt="License badge" src="https://img.shields.io/badge/License-GPLv3-336887.svg?style=for-the-badge&labelColor=458cb5&logoColor=white&logo=GNU"></a>
+<a href="https://github.com/JohnPullmann/DownloadCourseScript-Mosh/blob/main/LICENSE.txt"><img  style="display: inline;" alt="License badge" src="https://img.shields.io/badge/License-GPLv3-336887.svg?style=for-the-badge&labelColor=458cb5&logoColor=white&logo=GNU"></a>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 </div>
@@ -73,7 +73,7 @@ Ján Pullmann - john.pullmann@gmail.com
 
 
 [Badge License]: https://img.shields.io/badge/License-GPLv3-336887.svg?style=for-the-badge&labelColor=458cb5&logoColor=white&logo=GNU
-[License]: https://github.com/JohnPullmann/DownloadCourseScript-Mosh/LICENSE.txt
+[License]: https://github.com/JohnPullmann/DownloadCourseScript-Mosh/blob/main/LICENSE.txt
 
 [JohnPullmann Badge]: https://img.shields.io/badge/JohnPullmann-c20000?style=for-the-badge
 [JohnPullmann-url]: https://github.com/JohnPullmann
