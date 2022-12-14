@@ -41,7 +41,7 @@ logger.setLevel(logging.DEBUG)
 file_logging = True
 if file_logging:
     output_file_handler = logging.FileHandler(LOG_PATH)
-    output_file_handler.setLevel(logging.INFO)
+    output_file_handler.setLevel(logging.DEBUG)
     file_formatter = logging.Formatter("[%(asctime)s - 	%(name)s: %(filename)s.%(funcName)s:%(lineno)d - %(levelname)s] %(message)s")
     output_file_handler.setFormatter(file_formatter)
     logger.addHandler(output_file_handler)

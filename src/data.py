@@ -4,6 +4,7 @@ import requests
 import urllib
 import os
 import ntpath
+from src.logging_setup import logger
 
 class Data():
     links_array = []
@@ -16,7 +17,10 @@ class Data():
         try:
             urllib.request.urlopen(host)
         except:
-            raise Exception("You don't have internet connection!")
+            logger.exception("You don't have internet connection!")
+            raise
+        logger.debug("I am out")
+
         
 
     def get_course_link(self) -> bool:
@@ -36,7 +40,7 @@ class Data():
                 
             if n_links == 0:
                 raise Exception("File 'course_links.txt' is empty!")
-                
+        logger.info("Loading of courses from coure_links.txt was successful.")     
         return True
 
     def get_credentials(self) -> dict:
@@ -114,11 +118,12 @@ class Data():
             password = input_password()
             write_to_credentials(password=password)
 
+        logger.info("Loading of credentials was successful.")   
         return {"email": email, "password": password}
 
 
     def main_request(self, credentails) -> requests.sessions.Session:
-        
+        logger.info("Sending main request.")   
         def log_in():
             
             session = requests.Session()
@@ -149,7 +154,7 @@ class Data():
             return session
         
         session = log_in()
-        
+        logger.info("Logging in successful.")   
         
         def get_html_information():
             
@@ -195,7 +200,7 @@ class Data():
                         
                 
         get_html_information()
-    
+        logger.info("Main request successful.\n")
 
     def create_file_structure_and_download(self) -> bool:
         def create_folders_path(path: str) -> bool:
@@ -205,16 +210,18 @@ class Data():
                     os.makedirs(path)
                     return True
                 except OSError:
-                    print ("Creation of the directory %s failed" % path)
+                    logger.warning("Creation of the directory %s failed" % path)
                     return False
             else:
                 if path != "Courses/":
                     print(f"Course already downloaded. Skipped course - {path}")
                 return False
 
+        logger.info("Creating file structure.\n\n")
         create_folders_path("Courses/")
         
         for course in self.courses_data:
+            logger.info(f"Course: {course.name} - {course.time}")
             path = "Courses/"+course.name+" - "+course.time+"/"
 
             create_folders_path(path)
@@ -224,11 +231,16 @@ class Data():
                 create_folders_path(path)
                 
                 os.chdir(path)
-                
+                logger.info(f"Starting downloading section: {section}")
                 # Download lectures
                 for lecture in all_lectures:
                     lecture_instance = lecture
                     lecture_instance.download_lecture()
+                    logger.info(f"Lecture downloaded: {lecture.name}. link: {lecture.url}")
+                logger.info(f"Section downloading successful\n")
+            logger.info(f"Course downloading successful\n\n")
+
+                
 
             status = create_folders_path(path)
             if status:
