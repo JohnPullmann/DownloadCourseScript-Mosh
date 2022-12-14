@@ -64,7 +64,8 @@ Distributed under the GNU GPLv3 License. See `LICENSE.txt` for more information.
 <div align = center>
 
 <!-- CONTACT -->
-## Contact
+### **Contact**
+
 
 Ján Pullmann - john.pullmann@gmail.com
 </div>
