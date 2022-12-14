@@ -52,9 +52,10 @@
 
 Distributed under the GNU GPLv3 License. See `LICENSE.txt` for more information.
 
-<div style="display: flex;">
+<div>
 <a href="https://github.com/JohnPullmann/DownloadCourseScript-Mosh/LICENSE.txt"><img  style="display: inline;" alt="License badge" src="https://img.shields.io/badge/License-GPLv3-336887.svg?style=for-the-badge&labelColor=458cb5&logoColor=white&logo=GNU"></a>
-<p style="margin-left: auto;">(<a href="#readme-top">back to top</a>)</p>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 </div>
 
 <br>
