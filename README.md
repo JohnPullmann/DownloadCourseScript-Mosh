@@ -17,6 +17,7 @@
 <!-- DEPENDENCIES -->
 ## Dependencies
 
+* [Python 3.x](https://www.python.org/)
 * [Beautiful Soup 4](https://beautiful-soup-4.readthedocs.io/en/latest/)
 
     ```

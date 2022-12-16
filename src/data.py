@@ -324,8 +324,8 @@ class Lecture(Course):
         
         with open(self.name+'.mp4', "wb") as video:
                 video.write(response.content)
-                
-        print(f"{self.name} is downloaded.")
+
+        logger.INFO(f"{self.name} is downloaded.")     
 
 
     def __repr__(self) -> str:

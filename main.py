@@ -1,5 +1,8 @@
 from src.data import Data, Course, Lecture
 from src.logging_setup import logger
+import os
+
+os.system("color")
 
 def download_course() -> bool:
     
@@ -11,7 +14,7 @@ def download_course() -> bool:
     data.main_request(credentails)
 
 
-    #data.create_file_structure_and_download()
+    data.create_file_structure_and_download()
 
 
 if __name__ == "__main__":
