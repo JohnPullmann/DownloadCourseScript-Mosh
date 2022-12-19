@@ -23,6 +23,11 @@
     ```
     pip install beautifulsoup4
     ```
+* [Undetected-chromedriver](https://pypi.org/project/undetected-chromedriver/)
+
+    ```
+    pip install undetected-chromedriver
+    ```
 <br>
 
 
