@@ -5,6 +5,9 @@ import urllib
 import os
 import ntpath
 from src.logging_setup import logger
+import time
+from selenium.webdriver.common.by import By
+
 
 class Data():
     links_array = []
@@ -13,7 +16,7 @@ class Data():
     def __init__(self):
         self.is_internet_connect()
     
-    def is_internet_connect(self, host="http://google.com"):
+    def is_internet_connect(self, host: str="http://google.com"):
         try:
             urllib.request.urlopen(host)
         except:
@@ -21,27 +24,44 @@ class Data():
             raise
         logger.debug("I am out")
 
-        
 
-    def get_course_link(self) -> bool:
+    def validate_url_address(self, link: str) -> bool:
+        
+        try:
+            r = requests.get(link)
+            
+        except Exception as e:
+            raise ConnectionError(f"Someting is wrong with the url or server!\nurl: {link}")
+        
+        response = r.status_code
+        if 200 <= r.status_code <= 299:
+            return True
+        else:
+            raise Exception(f"[{response} Error]: {link}")
+
+
+    def get_course_links(self) -> bool:
         with open("course_links.txt", 'r') as file:
             n_links = 0
             file_content = file.read().splitlines()
             for url in file_content:
                 
                 if "http" in url or "https" in url:
-                    n_links += 1
-                    self.links_array.append(url)
+                    if self.validate_url_address(link=url):
+                        logger.info(f"Url address is correct: {url}")
+                        n_links += 1
+                        self.links_array.append(url)
                 elif set(url) == set(' ') or url == '':
                     pass
                 else:
-                    print(url)
                     raise Exception("Something is wrong with the url address!")
                 
             if n_links == 0:
                 raise Exception("File 'course_links.txt' is empty!")
-        logger.info("Loading of courses from coure_links.txt was successful.")     
+        logger.info("Loading of courses from coure_links.txt was successful.")
+        
         return True
+
 
     def get_credentials(self) -> dict:
 
@@ -120,89 +140,94 @@ class Data():
 
         logger.info("Loading of credentials was successful.")   
         return {"email": email, "password": password}
-
-
-    def main_request(self, credentails) -> requests.sessions.Session:
-        logger.info("Sending main request.")   
-        def log_in():
-            
-            session = requests.Session()
-            
-            payload = {
-                "email": credentails["email"],
-                "password": credentails["password"]
-            }
-
-            session.post("https://sso.teachable.com/secure/146684/identity/login/password", data=payload)
-            
-            def valid_url_address():
-                for link in self.links_array:
-                    
-                    r = session.get(link)
-                    response = r.status_code
-                    
-                    if 200 <= response <= 299:
-                        pass
-                    else:
-                        raise Exception(f"[{response} Error]: {link}")
-                    
-                return True 
-            
-            if valid_url_address():
-                pass
-            
-            return session
+    
+    
+    def log_in_to_website(self, credentails: dict, driver, log_in_link: str="https://sso.teachable.com/secure/146684/identity/login/password") -> None:
+        logger.info("Logging in to a website.")   
+        driver.get(log_in_link)
+        time.sleep(5)
         
-        session = log_in()
-        logger.info("Logging in successful.")   
+        driver.find_element(By.ID, "email").send_keys(credentails["email"])
+        time.sleep(1)
+        driver.find_element(By.ID, "password").send_keys(credentails["password"])
+        time.sleep(2)
+        driver.find_element(By.CLASS_NAME, "btn-primary").click()
+        time.sleep(5)
         
-        def get_html_information():
+        logger.info("Logging in successfully.")  
+        
+        
+    def convert_into_html(self, driver, link: str, stop_video: bool = False):
+        time.sleep(5)
+        driver.get(link)
+        
+        time.sleep(6)
+        # if stop_video: 
+        #     print("Video", driver.find_element(By.TAG_NAME, "video"))
+            # driver.find_element(By.TAG_NAME, "video").click()
+        
+        html = driver.page_source
+        
+        return html
+        
+    
+    def get_html_information(self, driver, link: str):
+
+        def get_rid_of_special_characters(element: str, better_time: bool = False) -> str:
             
-            def get_rid_of_special_characters(element: str, better_time: bool = False) -> str:
+            if better_time and '(' in element:
+                element_time = element[element.find('(')+1:-1]
+                element_time = element_time.replace(':','m') + 's'
+                element = element[:element.find('(')] + element_time
                 
-                if better_time and '(' in element:
-                    element_time = element[element.find('(')+1:-1]
-                    element_time = element_time.replace(':','m') + 's'
-                    element = element[:element.find('(')] + element_time
-                    
-                return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
+            return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
+            
+        
+        if self.validate_url_address(link=link):
+            pass
+        logger.info(f"Url address is correct: {link}")
+        
+        result = self.convert_into_html(driver=driver, link=link)
+
+        soup = BeautifulSoup(result, "html.parser")
+        
+        course_name = soup.find(name="h2").text
+        course_name = get_rid_of_special_characters(element=course_name)
+        
+        # Create Course
+        course = Course(course_name)
+        
+        sections_array = soup.find_all(class_="col-sm-12 course-section")
+        for section in sections_array:
+            
+            section_name = section.find(class_="section-title", role="heading").text.strip()
+            section_name = get_rid_of_special_characters(element=section_name)
+            course.add_section(section_name)
+            
+            lectures_array = section.find_all(class_="section-item")
+            
+            for lecture in lectures_array:
+                lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
+                
+                # The lecture is video 
+                if '(' in lecture_name and ')' in lecture_name:
+                    lecture_name = get_rid_of_special_characters(element=lecture_name, better_time=True)
+                    lecture_url = lecture.find(name="a", class_="item").get("href")
+                    lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
+                    course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
                 
             
-            for link in self.links_array:
+        logger.info("Have html information.\n")
 
-                result = session.get(link).text
-                soup = BeautifulSoup(result, "html.parser")
+    def create_file_structure_and_download(self, driver) -> bool:
+        
+        def has_dir_all_lectures(path: str, lecture_list: list) -> bool:
+            if os.path.exists(path):
+                if len(os.listdir(path)) == len(lecture_list):
+                    return True
+                return False
                 
-                course_name = soup.find(name="h2").text
-                course_name = get_rid_of_special_characters(element=course_name)
-                course = Course(course_name)
-                
-                sections_array = soup.find_all(class_="col-sm-12 course-section")
-                for section in sections_array:
-                    
-                    section_name = section.find(class_="section-title", role="heading").text.strip()
-                    section_name = get_rid_of_special_characters(element=section_name)
-                    course.add_section(section_name)
-                    
-                    lectures_array = section.find_all(class_="section-item")
-                    
-                    for lecture in lectures_array:
-
-                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
-                        
-                        # The lecture is video 
-                        if '(' in lecture_name and ')' in lecture_name:
-                            lecture_name = get_rid_of_special_characters(element=lecture_name, better_time=True)
-                            lecture_url = lecture.find(name="a", class_="item").get("href")
-                            lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
-                        
-                            course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
-                        
-                
-        get_html_information()
-        logger.info("Main request successful.\n")
-
-    def create_file_structure_and_download(self) -> bool:
+            
         def create_folders_path(path: str) -> bool:
             path = path.replace(os.sep, ntpath.sep)
             if not os.path.exists(path):
@@ -210,45 +235,56 @@ class Data():
                     os.makedirs(path)
                     return True
                 except OSError:
-                    logger.warning("Creation of the directory %s failed" % path)
+                    logger.warning(f"Creation of the directory {path} failed")
                     return False
             else:
                 if path != "Courses/":
-                    print(f"Course already downloaded. Skipped course - {path}")
+                    logger.info(f"Course already downloaded. Skipped course - {path}")
                 return False
 
-        logger.info("Creating file structure.\n\n")
+        logger.info("Creating file structure...\n\n")
         create_folders_path("Courses/")
         
         for course in self.courses_data:
             logger.info(f"Course: {course.name} - {course.time}")
-            path = "Courses/"+course.name+" - "+course.time+"/"
+            path = f"Courses/{course.name} - {course.time}/"
 
             create_folders_path(path)
-            
+            idx = 1
             for section, all_lectures in course.sections.items():
-                path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
+                
+                path = f"Courses/{course.name} - {course.time}/{idx}-{section}"
                 create_folders_path(path)
                 
-                os.chdir(path)
-                logger.info(f"Starting downloading section: {section}")
+                logger.info(f"Starting downloading section: {section}...")
+                
                 # Download lectures
+                if os.path.exists(path):
+                    if len(os.listdir(path)) != len(all_lectures):
+                        all_lectures = all_lectures[len(os.listdir(path)):]
+                
+                
                 for lecture in all_lectures:
-                    lecture_instance = lecture
-                    lecture_instance.download_lecture()
+                    if not has_dir_all_lectures(path=path, lecture_list=all_lectures):
+                        lecture.download_lecture(driver=driver, link=lecture.url, path=path)
+                    else:
+                        logger.info(f"{section} has all videos.")
+                    
                     logger.info(f"Lecture downloaded: {lecture.name}. link: {lecture.url}")
-                logger.info(f"Section downloading successful\n")
-            logger.info(f"Course downloading successful\n\n")
+                
+                idx += 1
+                
+                logger.info(f"Section downloading successful.\n")
+            logger.info(f"Course downloading successful.\n\n")
 
                 
 
-            status = create_folders_path(path)
-            if status:
-                for section, lectures in course.sections.items():
-                    path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
-                    create_folders_path(path)
-
-            
+            # status = create_folders_path(path)
+            # if status:
+            #     for section, lectures in course.sections.items():
+            #         # path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
+            #         path = f"Courses/{course.name} - {course.time}/{idx}-{section}"
+            #         create_folders_path(path)
 
 
 class Course(Data):
@@ -313,19 +349,20 @@ class Lecture(Course):
         self.url = "https://codewithmosh.com/" + link
 
         
-    def download_lecture(self) -> None:
-        
-        result = requests.get(self.url).text
+    def download_lecture(self, link: str, path:str, driver) -> None:
+        result = self.convert_into_html(driver=driver, link=link, stop_video=True)
         doc = BeautifulSoup(result, "html.parser")
         
         download_btn = doc.find_all(name="a", class_="download")[0].get("href")
+        logger.info(f"Start downloading lecture: {link}")
         
         response = requests.get(download_btn)
         
-        with open(self.name+'.mp4', "wb") as video:
-                video.write(response.content)
+        video_path = os.path.normpath(f"{path}/{self.name}.mp4")
+        with open(video_path, "wb") as video:
+            video.write(response.content)
 
-        logger.INFO(f"{self.name} is downloaded.")     
+        logger.info(f"{self.name} is downloaded.")     
 
 
     def __repr__(self) -> str:
