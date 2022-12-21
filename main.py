@@ -17,10 +17,6 @@ def download_course() -> bool:
     for link in data.links_array:
         data.get_html_information(driver=driver, link=link)
         data.create_file_structure_and_download(driver=driver)
-    
-    # data.main_request(credentails, driver)
-
-    # data.create_file_structure_and_download()
 
 
 if __name__ == "__main__":

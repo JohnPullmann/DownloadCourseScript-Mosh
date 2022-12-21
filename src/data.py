@@ -7,6 +7,7 @@ import ntpath
 from src.logging_setup import logger
 import time
 from selenium.webdriver.common.by import By
+import sys
 
 
 class Data():
@@ -253,7 +254,11 @@ class Data():
             idx = 1
             for section, all_lectures in course.sections.items():
                 
-                path = f"Courses/{course.name} - {course.time}/{idx}-{section}"
+                if section[0].isnumeric():
+                    path = f"Courses/{course.name} - {course.time}/{section}"
+                else:
+                    path = f"Courses/{course.name} - {course.time}/{idx}-{section}"
+                    
                 create_folders_path(path)
                 
                 logger.info(f"Starting downloading section: {section}...")
@@ -350,18 +355,40 @@ class Lecture(Course):
 
         
     def download_lecture(self, link: str, path:str, driver) -> None:
+        
+        def download_progress_bar(video, response):
+            # response = requests.get(download_btn, stream=True)
+            total_length = response.headers.get('content-length')
+            
+            if total_length is None: # no content length header
+                video.write(response.content)
+            else:
+                dl = 0
+                total_length = int(total_length)
+                for data in response.iter_content(chunk_size=4096):
+                    dl += len(data)
+                    # video.write(data)
+                    done = int(50 * dl / total_length)
+                    # sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )
+                    sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}] {round(dl//1_000_000)}/{total_length//1_000_000}") 
+                    sys.stdout.flush()
+            
+        
         result = self.convert_into_html(driver=driver, link=link, stop_video=True)
         doc = BeautifulSoup(result, "html.parser")
         
         download_btn = doc.find_all(name="a", class_="download")[0].get("href")
         logger.info(f"Start downloading lecture: {link}")
         
-        response = requests.get(download_btn)
+        # response = requests.get(download_btn, stream=True)
+        response = requests.get(download_btn, stream=True)
         
         video_path = os.path.normpath(f"{path}/{self.name}.mp4")
         with open(video_path, "wb") as video:
-            video.write(response.content)
-
+            # video.write(response.content)
+            download_progress_bar(video=video, response=response)
+            
+        print()
         logger.info(f"{self.name} is downloaded.")     
 
 
