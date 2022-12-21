@@ -39,7 +39,7 @@
 
 2. Clone the repo.
     ```
-    git clone git@github.com:JohnPullmann/DownloadCourseScript-Mosh.git
+    git clone https://github.com/JohnPullmann/DownloadCourseScript-Mosh.git
     ``` 
 3. (Optional) Enter credentials to `credentials.txt`. If you don't enter them, script will ask for them. 
 
