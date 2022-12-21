@@ -264,16 +264,20 @@ class Data():
                 logger.info(f"Starting downloading section: {section}...")
                 
                 # Download lectures
-                if os.path.exists(path):
-                    if len(os.listdir(path)) != len(all_lectures):
-                        all_lectures = all_lectures[len(os.listdir(path)):]
+                # if os.path.exists(path):
+                #     if len(os.listdir(path)) != len(all_lectures):
+                #         all_lectures = all_lectures[len(os.listdir(path)):]
                 
                 
                 for lecture in all_lectures:
                     if not has_dir_all_lectures(path=path, lecture_list=all_lectures):
-                        lecture.download_lecture(driver=driver, link=lecture.url, path=path)
+                        
+                        if f"{lecture.name}.mp4" not in os.listdir(path):
+                            lecture.download_lecture(driver=driver, link=lecture.url, path=path)
+                        
                     else:
                         logger.info(f"{section} has all videos.")
+                        break
                     
                     logger.info(f"Lecture downloaded: {lecture.name}. link: {lecture.url}")
                 
@@ -367,7 +371,7 @@ class Lecture(Course):
                 total_length = int(total_length)
                 for data in response.iter_content(chunk_size=4096):
                     dl += len(data)
-                    # video.write(data)
+                    video.write(data)
                     done = int(50 * dl / total_length)
                     # sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )
                     sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}] {round(dl//1_000_000)}/{total_length//1_000_000}") 
@@ -380,7 +384,6 @@ class Lecture(Course):
         download_btn = doc.find_all(name="a", class_="download")[0].get("href")
         logger.info(f"Start downloading lecture: {link}")
         
-        # response = requests.get(download_btn, stream=True)
         response = requests.get(download_btn, stream=True)
         
         video_path = os.path.normpath(f"{path}/{self.name}.mp4")
