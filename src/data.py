@@ -263,11 +263,6 @@ class Data():
                 
                 logger.info(f"Starting downloading section: {section}...")
                 
-                # Download lectures
-                # if os.path.exists(path):
-                #     if len(os.listdir(path)) != len(all_lectures):
-                #         all_lectures = all_lectures[len(os.listdir(path)):]
-                
                 
                 for lecture in all_lectures:
                     if not has_dir_all_lectures(path=path, lecture_list=all_lectures):
@@ -367,6 +362,7 @@ class Lecture(Course):
             if total_length is None: # no content length header
                 video.write(response.content)
             else:
+                start = time.perf_counter()
                 dl = 0
                 total_length = int(total_length)
                 for data in response.iter_content(chunk_size=4096):
@@ -374,7 +370,7 @@ class Lecture(Course):
                     video.write(data)
                     done = int(50 * dl / total_length)
                     # sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )
-                    sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}] {round(dl//1_000_000)}/{total_length//1_000_000}") 
+                    sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}] {round(dl//1_000_000)}/{total_length//1_000_000} {round((dl//(time.perf_counter() - start))/1_000_000, 2)}Mbps") 
                     sys.stdout.flush()
             
         
