@@ -198,6 +198,7 @@ class Data():
         # Create Course
         course = Course(course_name)
         
+        sec_idx = 1
         sections_array = soup.find_all(class_="col-sm-12 course-section")
         for section in sections_array:
             
@@ -205,22 +206,32 @@ class Data():
             if section_name.find("(") < section_name.find(":"):
                 section_time = section_name[section_name.find("("):-1].replace(":","h") + 'm)'
                 section_name = section_name[:section_name.find("(")] + section_time
-                
+            
+            if not section_name.strip()[0].isnumeric():
+                section_name = f"{sec_idx}-{section_name}"
+            
             section_name = get_rid_of_special_characters(element=section_name)
             course.add_section(section_name)
             
             lectures_array = section.find_all(class_="section-item")
             
+            lec_idx = 1
             for lecture in lectures_array:
                 lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
                 
                 # The lecture is video 
                 if '(' in lecture_name and ')' in lecture_name:
                     lecture_name = get_rid_of_special_characters(element=lecture_name, better_time=True)
+                    
+                    if not lecture_name.strip()[0].isnumeric():
+                        lecture_name = f"{lec_idx}-{lecture_name}"
+                        
                     lecture_url = lecture.find(name="a", class_="item").get("href")
                     lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
                     course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
-                
+                    
+                lec_idx += 1
+            sec_idx += 1
             
         logger.info("Have html information.\n")
 
@@ -255,14 +266,10 @@ class Data():
             path = f"Courses/{course.name} - {course.time}/"
 
             create_folders_path(path)
-            idx = 1
+            
             for section, all_lectures in course.sections.items():
-                
-                if section[0].isnumeric():
-                    path = f"Courses/{course.name} - {course.time}/{section}"
-                else:
-                    path = f"Courses/{course.name} - {course.time}/{idx}-{section}"
-                    
+                path = f"Courses/{course.name} - {course.time}/{section}"
+
                 create_folders_path(path)
                 
                 # logger.info(f"Starting downloading section: {section}...")
@@ -281,8 +288,6 @@ class Data():
                     else:
                         logger.info(f"Section: {section} has all videos.\n")
                         break
-                # print()
-                idx += 1
                 
                 
             logger.info(f"Course downloaded successful.\n\n")
