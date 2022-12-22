@@ -193,6 +193,10 @@ class Data():
         soup = BeautifulSoup(result, "html.parser")
         
         course_name = soup.find(name="h2").text
+        
+        if "C#" in course_name:
+            course_name = course_name.replace("C#", "C-Sharp")
+        
         course_name = get_rid_of_special_characters(element=course_name)
         
         # Create Course
@@ -221,16 +225,21 @@ class Data():
                 
                 # The lecture is video 
                 if '(' in lecture_name and ')' in lecture_name:
+                    if "C#" in lecture_name:
+                        lecture_name = lecture_name.replace("C#", "C-Sharp")
+                        
                     lecture_name = get_rid_of_special_characters(element=lecture_name, better_time=True)
                     
                     if not lecture_name.strip()[0].isnumeric():
                         lecture_name = f"{lec_idx}-{lecture_name}"
-                        
+                    
+                        lec_idx += 1
+                    
                     lecture_url = lecture.find(name="a", class_="item").get("href")
                     lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
                     course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
                     
-                lec_idx += 1
+                
             sec_idx += 1
             
         logger.info("Have html information.\n")
