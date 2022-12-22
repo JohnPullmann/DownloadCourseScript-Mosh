@@ -202,6 +202,10 @@ class Data():
         for section in sections_array:
             
             section_name = section.find(class_="section-title", role="heading").text.strip()
+            if section_name.find("(") < section_name.find(":"):
+                section_time = section_name[section_name.find("("):-1].replace(":","h") + 'm)'
+                section_name = section_name[:section_name.find("(")] + section_time
+                
             section_name = get_rid_of_special_characters(element=section_name)
             course.add_section(section_name)
             
@@ -238,12 +242,12 @@ class Data():
                 except OSError:
                     logger.warning(f"Creation of the directory {path} failed")
                     return False
-            else:
-                if path != "Courses/":
-                    logger.info(f"Course already downloaded. Skipped course - {path}")
-                return False
+            # else:
+            #     if path != "Courses/":
+            #         logger.info(f"Course already downloaded. Skipped course - {path}")
+            #     return False
 
-        logger.info("Creating file structure...\n\n")
+        logger.info("Creating file structure...\n")
         create_folders_path("Courses/")
         
         for course in self.courses_data:
@@ -261,28 +265,28 @@ class Data():
                     
                 create_folders_path(path)
                 
-                logger.info(f"Starting downloading section: {section}...")
-                
+                # logger.info(f"Starting downloading section: {section}...")
+                print()
+                logger.info(f"Looking at section: {section}")
                 
                 for lecture in all_lectures:
+                    
                     if not has_dir_all_lectures(path=path, lecture_list=all_lectures):
                         
                         if f"{lecture.name}.mp4" not in os.listdir(path):
                             lecture.download_lecture(driver=driver, link=lecture.url, path=path)
+                            # logger.info(f"Section downloading successful.\n")
+                            # logger.info(f"Lecture downloaded: {lecture.name}")
                         
                     else:
-                        logger.info(f"{section} has all videos.")
+                        logger.info(f"Section: {section} has all videos.\n")
                         break
-                    
-                    logger.info(f"Lecture downloaded: {lecture.name}. link: {lecture.url}")
-                
+                # print()
                 idx += 1
                 
-                logger.info(f"Section downloading successful.\n")
-            logger.info(f"Course downloading successful.\n\n")
-
                 
-
+            logger.info(f"Course downloaded successful.\n\n")
+            
             # status = create_folders_path(path)
             # if status:
             #     for section, lectures in course.sections.items():
@@ -322,10 +326,12 @@ class Course(Data):
                             course_time += int(x[1][:-1])
                     else:
                         course_time += int(s_time[:-1])
-                else:
-                    x = s_time.strip().split(":")
-                    course_time +=  60 * int(x[0])
-                    course_time += int(x[1])
+                # else:
+                #     x = s_time
+                #     m = x[:2].strip()
+                #     s = x[2:].strip()
+                #     course_time +=  60 * int(m)
+                #     course_time += int(s)
 
         minutes, hours = course_time % 60, course_time // 60
         course_time = f"{hours}{'h' if hours != 0 else ''}{minutes}{'m' if minutes != 0 else ''}"
@@ -370,7 +376,7 @@ class Lecture(Course):
                     video.write(data)
                     done = int(50 * dl / total_length)
                     # sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )
-                    sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}] {round(dl//1_000_000)}/{total_length//1_000_000} {round((dl//(time.perf_counter() - start))/1_000_000, 2)}Mbps") 
+                    sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}] {self.name} -> {round(dl//1_000_000)}/{total_length//1_000_000} {round((dl//(time.perf_counter() - start))/1_000_000, 2)}Mbps") 
                     sys.stdout.flush()
             
         
@@ -388,7 +394,7 @@ class Lecture(Course):
             download_progress_bar(video=video, response=response)
             
         print()
-        logger.info(f"{self.name} is downloaded.")     
+        # logger.info(f"{self.name} is downloaded.")     
 
 
     def __repr__(self) -> str:
