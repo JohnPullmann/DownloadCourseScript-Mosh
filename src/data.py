@@ -159,16 +159,10 @@ class Data():
         
         
     def convert_into_html(self, driver, link: str, stop_video: bool = False):
-        time.sleep(5)
+        time.sleep(3)
         driver.get(link)
         
-        time.sleep(6)
-        # if stop_video: 
-        #     print("Video", driver.find_element(By.TAG_NAME, "video"))
-            # driver.find_element(By.TAG_NAME, "video").click()
-        
         html = driver.page_source
-        
         return html
         
     
