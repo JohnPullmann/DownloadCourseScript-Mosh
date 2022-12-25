@@ -201,6 +201,37 @@ class Data():
         for section in sections_array:
             
             section_name = section.find(class_="section-title", role="heading").text.strip()
+
+            try:
+                section_name.index("(")
+            except ValueError:
+                logger.debug("Section {section_name} doesn't have time in title.")
+                
+                logger.debug("Calculating section time ...")
+                s_time = 0
+
+                lectures_array = section.find_all(class_="section-item")
+                lec_idx = 1
+                for lecture in lectures_array:
+                    try:
+                        lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
+                        minutes, seconds = lecture_name[lecture_name.find("(")+1:-1].split(":")
+                        lecture_time = int(minutes)*60 + int(seconds)
+                        s_time += lecture_time
+                    except:
+                        #lectures without time in name, ignore lecture time
+                        logger.debug("Lecture doesn't have time in title.")
+                        pass
+                
+                s_time = s_time // 60
+                minutes, hours = s_time % 60, s_time // 60
+                s_time = f"({f'{hours}h' if hours != 0 else ''}{minutes}{'m' if minutes != 0 else ''})"
+                section_name = f"{section_name} {s_time}"
+
+                logger.debug("Section time: {s_time}")
+
+
+
             if section_name.find("(") < section_name.find(":"):
                 section_time = section_name[section_name.find("("):-1].replace(":","h") + 'm)'
                 section_name = section_name[:section_name.find("(")] + section_time
