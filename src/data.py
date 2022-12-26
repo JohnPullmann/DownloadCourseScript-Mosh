@@ -77,14 +77,14 @@ class Data():
         def input_email() -> str:
             email = ""
             while email == "" or validate_email(email) == False:
-                print("Email is invalid!")
+                logger.warning("Email is invalid!")
                 email = input("Change credentials.txt or Enter email: ")
             return email
                 
         def input_password() -> str:
             password = ""
             while password == "" or ' ' in password:
-                print("Password is invalid!")
+                logger.warning("Password is invalid!")
                 password = input("Change credentials.txt or Enter password: ")
             return password
 
@@ -105,7 +105,7 @@ class Data():
                     file.write(lines[1]+"\n")
 
         def change_credentials() -> tuple[str, str]:
-            print("Invalid content format of creadentials.txt")
+            logger.warning("Invalid content format of creadentials.txt")
             email = input_email()
             password = input_password()
             write_to_credentials(email=email, password=password)
@@ -319,7 +319,7 @@ class Data():
                 create_folders_path(path)
                 
                 # logger.info(f"Starting downloading section: {section}...")
-                print()
+                print(" ")
                 logger.info(f"Looking at section: {section} [{i_section}/{len(course.sections)}]")
                 
                 for i_lecture, lecture in enumerate(all_lectures):
@@ -396,7 +396,7 @@ class Course(Data):
             self.__time = course_time
             return course_time
         else:
-            print("Time of course couldn't be calculated because no sections were found. Please first add some sections!")
+            logger.warning("Time of course couldn't be calculated because no sections were found. Please first add some sections!")
             return ""
 
 
@@ -445,7 +445,7 @@ class Lecture(Course):
             # video.write(response.content)
             download_progress_bar(video=video, response=response)
             
-        print()
+        print(" ")
         # logger.info(f"{self.name} is downloaded.")     
 
 
