@@ -7,6 +7,8 @@ import ntpath
 from src.logging_setup import logger
 import time
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import sys
 
 
@@ -146,23 +148,32 @@ class Data():
     def log_in_to_website(self, credentails: dict, driver, log_in_link: str="https://sso.teachable.com/secure/146684/identity/login/password") -> None:
         logger.info("Logging in to a website.")   
         driver.get(log_in_link)
-        time.sleep(5)
-        
+
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "email")))
         driver.find_element(By.ID, "email").send_keys(credentails["email"])
-        time.sleep(1)
+
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "password")))
         driver.find_element(By.ID, "password").send_keys(credentails["password"])
-        time.sleep(2)
+
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.CLASS_NAME, "btn-primary")))
         driver.find_element(By.CLASS_NAME, "btn-primary").click()
-        time.sleep(5)
+
+        #time.sleep(5)
         
-        logger.info("Logging in successfully.")  
+        logger.info("Logging in successfully.\n\n")  
         
         
     def convert_into_html(self, driver, link: str, stop_video: bool = False):
-        time.sleep(3)
+        #time.sleep(5)
         driver.get(link)
         
+        #time.sleep(6)
+        # if stop_video: 
+        #     print("Video", driver.find_element(By.TAG_NAME, "video"))
+            # driver.find_element(By.TAG_NAME, "video").click()
+        
         html = driver.page_source
+        
         return html
         
     
