@@ -171,9 +171,9 @@ class Data():
         def get_rid_of_special_characters(element: str, better_time: bool = False) -> str:
             
             if better_time and '(' in element:
-                element_time = element[element.find('(')+1:-1]
+                element_time = element[element.rfind('(')+1:-1]
                 element_time = element_time.replace(':','m') + 's'
-                element = element[:element.find('(')] + element_time
+                element = element[:element.rfind('(')] + element_time
                 
             return "".join([x for x in element if x not in "/><:\"#\\|?!*,%[].'';:"])
             
@@ -215,7 +215,7 @@ class Data():
                 for lecture in lectures_array:
                     try:
                         lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
-                        minutes, seconds = lecture_name[lecture_name.find("(")+1:-1].split(":")
+                        minutes, seconds = lecture_name[lecture_name.rfind("(")+1:-1].split(":")
                         lecture_time = int(minutes)*60 + int(seconds)
                         s_time += lecture_time
                     except:
@@ -232,9 +232,9 @@ class Data():
 
 
 
-            if section_name.find("(") < section_name.find(":"):
-                section_time = section_name[section_name.find("("):-1].replace(":","h") + 'm)'
-                section_name = section_name[:section_name.find("(")] + section_time
+            if section_name.rfind("(") < section_name.rfind(":"):
+                section_time = section_name[section_name.rfind("("):-1].replace(":","h") + 'm)'
+                section_name = section_name[:section_name.rfind("(")] + section_time
             
             if not section_name.strip()[0].isnumeric():
                 section_name = f"{sec_idx}-{section_name}"
@@ -354,7 +354,7 @@ class Course(Data):
 
         course_time = 0
         for section in self.sections:
-            s = section.index("(")
+            s = section.rfind("(")
             s_time = section[s+1:-1]
             if 's' not in s_time:
                 if 'h' in s_time or 'm' in s_time:
