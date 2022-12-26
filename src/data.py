@@ -45,21 +45,21 @@ class Data():
 
     def get_course_links(self) -> bool:
         with open("course_links.txt", 'r') as file:
-            n_links = 0
+            Data.n_links = 0
             file_content = file.read().splitlines()
             for url in file_content:
                 
                 if "http" in url or "https" in url:
                     if self.validate_url_address(link=url):
                         logger.info(f"Url address is correct: {url}")
-                        n_links += 1
+                        Data.n_links += 1
                         self.links_array.append(url)
                 elif set(url) == set(' ') or url == '':
                     pass
                 else:
                     raise Exception("Something is wrong with the url address!")
                 
-            if n_links == 0:
+            if Data.n_links == 0:
                 raise Exception("File 'course_links.txt' is empty!")
         logger.info("Loading of courses from coure_links.txt was successful.")
         
@@ -306,27 +306,28 @@ class Data():
         logger.info("Creating file structure...\n")
         create_folders_path("Courses/")
         
-        for course in self.courses_data:
-            logger.info(f"Course: {course.name} - {course.time}")
+        for i_course, course in enumerate(self.courses_data):
+            logger.info(f"Course: {course.name} - {course.time} [{i_course+1}/{Data.n_links}]")
             path = f"Courses/{course.name} - {course.time}/"
 
             create_folders_path(path)
-            
+            i_section = 0
             for section, all_lectures in course.sections.items():
+                i_section += 1
                 path = f"Courses/{course.name} - {course.time}/{section}"
 
                 create_folders_path(path)
                 
                 # logger.info(f"Starting downloading section: {section}...")
                 print()
-                logger.info(f"Looking at section: {section}")
+                logger.info(f"Looking at section: {section} [{i_section}/{len(course.sections)}]")
                 
-                for lecture in all_lectures:
+                for i_lecture, lecture in enumerate(all_lectures):
                     
                     if not has_dir_all_lectures(path=path, lecture_list=all_lectures):
                         
                         if f"{lecture.name}.mp4" not in os.listdir(path):
-                            lecture.download_lecture(driver=driver, link=lecture.url, path=path)
+                            lecture.download_lecture(driver=driver, link=lecture.url, path=path, i=f"[{i_lecture+1}/{len(all_lectures)}]")
                             # logger.info(f"Section downloading successful.\n")
                             # logger.info(f"Lecture downloaded: {lecture.name}")
                         
@@ -335,7 +336,7 @@ class Data():
                         break
                 
                 
-            logger.info(f"Course downloaded successful.\n\n")
+            logger.info(f"Course downloaded successful.\n\n\n\n")
             
             # status = create_folders_path(path)
             # if status:
@@ -354,8 +355,9 @@ class Course(Data):
         Data.courses_data.append(self)
 
         
-    def add_section(self, lecture_name: str):
-        self.sections[lecture_name] = []
+    def add_section(self, section_name: str):
+
+        self.sections[section_name] = []
 
     def add_lecture(self, section_name: str, lecture_link: str, lecture_name: str, lecture_id: str):
         lecture = Lecture(lecture_name, lecture_id, lecture_link)
@@ -409,7 +411,7 @@ class Lecture(Course):
         self.url = "https://codewithmosh.com/" + link
 
         
-    def download_lecture(self, link: str, path:str, driver) -> None:
+    def download_lecture(self, link: str, path:str, driver, i: str) -> None:
         
         def download_progress_bar(video, response):
             # response = requests.get(download_btn, stream=True)
@@ -434,7 +436,7 @@ class Lecture(Course):
         doc = BeautifulSoup(result, "html.parser")
         
         download_btn = doc.find_all(name="a", class_="download")[0].get("href")
-        logger.info(f"Start downloading lecture: {link}")
+        logger.info(f"Start downloading lecture {i}: {link}")
         
         response = requests.get(download_btn, stream=True)
         
