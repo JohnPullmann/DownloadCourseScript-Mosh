@@ -247,6 +247,9 @@ class Data():
                 section_time = section_name[section_name.rfind("("):-1].replace(":","h") + 'm)'
                 section_name = section_name[:section_name.rfind("(")] + section_time
             
+            section_time = section_name[section_name.rfind("("):].replace(" min","m")
+            section_name = section_name[:section_name.rfind("(")] + section_time
+            
             if not section_name.strip()[0].isnumeric():
                 section_name = f"{sec_idx}-{section_name}"
             
