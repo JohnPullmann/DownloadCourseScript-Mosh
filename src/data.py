@@ -306,44 +306,46 @@ class Data():
         logger.info("Creating file structure...\n")
         create_folders_path("Courses/")
         
-        for i_course, course in enumerate(self.courses_data):
-            logger.info(f"Course: {course.name} - {course.time} [{i_course+1}/{Data.n_links}]")
-            path = f"Courses/{course.name} - {course.time}/"
+
+        i_course = len(self.courses_data)
+        course = self.courses_data[-1]
+        logger.info(f"Course: {course.name} - {course.time} [{i_course}/{Data.n_links}]")
+        path = f"Courses/{course.name} - {course.time}/"
+
+        create_folders_path(path)
+        i_section = 0
+        for section, all_lectures in course.sections.items():
+            i_section += 1
+            path = f"Courses/{course.name} - {course.time}/{section}"
 
             create_folders_path(path)
-            i_section = 0
-            for section, all_lectures in course.sections.items():
-                i_section += 1
-                path = f"Courses/{course.name} - {course.time}/{section}"
-
-                create_folders_path(path)
-                
-                # logger.info(f"Starting downloading section: {section}...")
-                print(" ")
-                logger.info(f"Looking at section: {section} [{i_section}/{len(course.sections)}]")
-                
-                for i_lecture, lecture in enumerate(all_lectures):
-                    
-                    if not has_dir_all_lectures(path=path, lecture_list=all_lectures):
-                        
-                        if f"{lecture.name}.mp4" not in os.listdir(path):
-                            lecture.download_lecture(driver=driver, link=lecture.url, path=path, i=f"[{i_lecture+1}/{len(all_lectures)}]")
-                            # logger.info(f"Section downloading successful.\n")
-                            # logger.info(f"Lecture downloaded: {lecture.name}")
-                        
-                    else:
-                        logger.info(f"Section: {section} has all videos.\n")
-                        break
-                
-                
-            logger.info(f"Course downloaded successful.\n\n\n\n")
             
-            # status = create_folders_path(path)
-            # if status:
-            #     for section, lectures in course.sections.items():
-            #         # path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
-            #         path = f"Courses/{course.name} - {course.time}/{idx}-{section}"
-            #         create_folders_path(path)
+            # logger.info(f"Starting downloading section: {section}...")
+            print(" ")
+            logger.info(f"Looking at section: {section} [{i_section}/{len(course.sections)}]")
+            
+            for i_lecture, lecture in enumerate(all_lectures):
+                
+                if not has_dir_all_lectures(path=path, lecture_list=all_lectures):
+                    
+                    if f"{lecture.name}.mp4" not in os.listdir(path):
+                        lecture.download_lecture(driver=driver, link=lecture.url, path=path, i=f"[{i_lecture+1}/{len(all_lectures)}]")
+                        # logger.info(f"Section downloading successful.\n")
+                        # logger.info(f"Lecture downloaded: {lecture.name}")
+                    
+                else:
+                    logger.info(f"Section: {section} has all videos.\n")
+                    break
+            
+            
+        logger.info(f"Course downloaded successful.\n\n\n\n")
+        
+        # status = create_folders_path(path)
+        # if status:
+        #     for section, lectures in course.sections.items():
+        #         # path = "Courses/"+course.name+" - "+course.time+"/"+section+"/"
+        #         path = f"Courses/{course.name} - {course.time}/{idx}-{section}"
+        #         create_folders_path(path)
 
 
 class Course(Data):
@@ -435,18 +437,21 @@ class Lecture(Course):
         result = self.convert_into_html(driver=driver, link=link, stop_video=True)
         doc = BeautifulSoup(result, "html.parser")
         
-        download_btn = doc.find_all(name="a", class_="download")[0].get("href")
-        logger.info(f"Start downloading lecture {i}: {link}")
-        
-        response = requests.get(download_btn, stream=True)
-        
-        video_path = os.path.normpath(f"{path}/{self.name}.mp4")
-        with open(video_path, "wb") as video:
-            # video.write(response.content)
-            download_progress_bar(video=video, response=response)
+        try:
+            download_btn = doc.find_all(name="a", class_="download")[0].get("href")
+            logger.info(f"Start downloading lecture {i}: {link}")
             
-        print(" ")
-        # logger.info(f"{self.name} is downloaded.")     
+            response = requests.get(download_btn, stream=True)
+            
+            video_path = os.path.normpath(f"{path}/{self.name}.mp4")
+            with open(video_path, "wb") as video:
+                # video.write(response.content)
+                download_progress_bar(video=video, response=response)
+                
+            print(" ")
+
+        except IndexError:
+            logger.warning(f"Download button wasn't found.")
 
 
     def __repr__(self) -> str:
