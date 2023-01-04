@@ -151,6 +151,7 @@ class Data():
 
         WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "email")))
         driver.find_element(By.ID, "email").send_keys(credentails["email"])
+        time.sleep(3)
 
         WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "password")))
         driver.find_element(By.ID, "password").send_keys(credentails["password"])
@@ -258,27 +259,35 @@ class Data():
             
             lectures_array = section.find_all(class_="section-item")
             
-            lec_idx = 1
+            lec_idx = 0
             for lecture in lectures_array:
                 lecture_name = lecture.find(name="span", class_="lecture-name").text.strip().replace("\n", " ")
                 
                 # The lecture is video 
                 if '(' in lecture_name and ')' in lecture_name:
-                    if "C#" in lecture_name:
-                        lecture_name = lecture_name.replace("C#", "C-Sharp")
-                        
-                    lecture_name = get_rid_of_special_characters(element=lecture_name, better_time=True)
+                    is_lecture = True
+                    lec_idx += 1
+                else:
+                    is_lecture = False
+                
+                if "C#" in lecture_name:
+                    lecture_name = lecture_name.replace("C#", "C-Sharp")
                     
-                    if not lecture_name.strip()[0].isnumeric():
-                        lecture_name = f"{lec_idx}-{lecture_name}"
-                    
-                        lec_idx += 1
-                    
-                    lecture_url = lecture.find(name="a", class_="item").get("href")
-                    lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
-                    course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+                lecture_name = get_rid_of_special_characters(element=lecture_name, better_time=True)
+                
+                if not lecture_name.strip()[0].isnumeric():
+                    lecture_name = f"{lec_idx}-{lecture_name}"
+                
                     
                 
+                lecture_url = lecture.find(name="a", class_="item").get("href")
+                lecture_id = lecture.find(name="a", class_="item").get("data-ss-lecture-id")
+                
+                if is_lecture:
+                    course.add_lecture(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+                else:
+                    course.add_attachment(section_name=section_name, lecture_link=lecture_url, lecture_name=lecture_name, lecture_id=lecture_id)
+
             sec_idx += 1
             
         logger.info("Have html information.\n")
@@ -329,16 +338,22 @@ class Data():
             
             for i_lecture, lecture in enumerate(all_lectures):
                 
-                if not has_dir_all_lectures(path=path, lecture_list=all_lectures):
-                    
-                    if f"{lecture.name}.mp4" not in os.listdir(path):
-                        lecture.download_lecture(driver=driver, link=lecture.url, path=path, i=f"[{i_lecture+1}/{len(all_lectures)}]")
-                        # logger.info(f"Section downloading successful.\n")
-                        # logger.info(f"Lecture downloaded: {lecture.name}")
-                    
+                if f"{lecture.name}.mp4" not in os.listdir(path):
+                    lecture.download_lecture(driver=driver, link=lecture.url, path=path, i=f"[{i_lecture+1}/{len(all_lectures)}]")
+                    # logger.info(f"Section downloading successful.\n")
+                    # logger.info(f"Lecture downloaded: {lecture.name}")
                 else:
-                    logger.info(f"Section: {section} has all videos.\n")
-                    break
+                    logger.info(f"Lecture already downloaded: {lecture.name}")
+
+                lecture.download_lecture_attachment(driver=driver, link=lecture.url, path=path, i=f"{i_lecture+1}")
+            logger.info(f"Section: {section} has all videos.\n")
+
+        if course.attachments:
+            logger.info(f"Downloading attachments:\n")
+        for section, all_attachments in course.attachments.items():
+            path = f"Courses/{course.name} - {course.time}/{section}"
+            for attachment in all_attachments:
+                attachment.download_lecture_attachment(driver=driver, link=attachment.url, path=path)
             
             
         logger.info(f"Course downloaded successful.\n\n\n\n")
@@ -356,6 +371,7 @@ class Course(Data):
         self.name = name
         self.__time = time
         self.sections = {}
+        self.attachments = {}
         
         Data.courses_data.append(self)
 
@@ -363,10 +379,15 @@ class Course(Data):
     def add_section(self, section_name: str):
 
         self.sections[section_name] = []
+        self.attachments[section_name] = []
 
     def add_lecture(self, section_name: str, lecture_link: str, lecture_name: str, lecture_id: str):
         lecture = Lecture(lecture_name, lecture_id, lecture_link)
         self.sections[section_name].append(lecture)
+    
+    def add_attachment(self, section_name: str, lecture_link: str, lecture_name: str, lecture_id: str):
+        lecture = Lecture(lecture_name, lecture_id, lecture_link)
+        self.attachments[section_name].append(lecture)
     
     def get_cource_time(self) -> str:
 
@@ -415,10 +436,7 @@ class Lecture(Course):
         self.id = ID 
         self.url = "https://codewithmosh.com/" + link
 
-        
-    def download_lecture(self, link: str, path:str, driver, i: str) -> None:
-        
-        def download_progress_bar(video, response):
+    def download_progress_bar(self, video, response):
             # response = requests.get(download_btn, stream=True)
             total_length = response.headers.get('content-length')
             
@@ -435,7 +453,9 @@ class Lecture(Course):
                     # sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )
                     sys.stdout.write(f"\r[{'=' * done}{' ' * (50-done)}] {self.name} -> {round(dl//1_000_000)}/{total_length//1_000_000} {round((dl//(time.perf_counter() - start))/1_000_000, 2)}Mbps") 
                     sys.stdout.flush()
-            
+        
+
+    def download_lecture(self, link: str, path:str, driver, i: str) -> None:
         
         result = self.convert_into_html(driver=driver, link=link, stop_video=True)
         doc = BeautifulSoup(result, "html.parser")
@@ -449,13 +469,48 @@ class Lecture(Course):
             video_path = os.path.normpath(f"{path}/{self.name}.mp4")
             with open(video_path, "wb") as video:
                 # video.write(response.content)
-                download_progress_bar(video=video, response=response)
+                self.download_progress_bar(video=video, response=response)
                 
             print(" ")
 
         except IndexError:
             logger.warning(f"Download button wasn't found.")
 
+
+    def download_lecture_attachment(self, link: str, path:str, driver, i: str = "") -> None:
+        
+        result = self.convert_into_html(driver=driver, link=link, stop_video=True)
+        doc = BeautifulSoup(result, "html.parser")
+
+        lecture_attachments = doc.find_all(name="a", class_="download")
+        
+        for lecture_attachment in lecture_attachments:
+            attachment_name = None
+            for line in lecture_attachment.text.split('\n'):
+                if ".pdf" in line or ".zip" in line:
+                    attachment_name = line
+                    break
+            
+            if attachment_name != None:
+    
+                lecture_attachment_link = lecture_attachment.get("href")
+
+                attachment_name = f"{i if i != '' else self.name.split('-')[0]}- {attachment_name}"
+
+                if attachment_name not in os.listdir(path):
+                    logger.info(f"Start downloading lecture attachment '{attachment_name}': {lecture_attachment_link}")
+                    
+                    response = requests.get(lecture_attachment_link, stream=True)
+                    
+                    attachment_path = os.path.normpath(f"{path}/{attachment_name}")
+                    with open(attachment_path, "wb") as attachment:
+                        # attachment.write(response.content)
+                        self.download_progress_bar(video=attachment, response=response)
+
+                    print(" ")
+                else:
+                    logger.info(f"Lecture attachment already downloaded: {attachment_name}")
+            
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name}, {self.id})"
